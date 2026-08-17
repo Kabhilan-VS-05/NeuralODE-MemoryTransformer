@@ -11,6 +11,6 @@ def zipdir(path, ziph):
             ziph.write(file_path, os.path.relpath(file_path, path))
 
 os.makedirs('Zip files', exist_ok=True)
-with zipfile.ZipFile('Zip files/backup_v4.1.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+with zipfile.ZipFile('Zip files/backup_v4.2.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
     zipdir('.', zipf)
-print("Successfully created Zip files/backup_v4.1.zip")
+print("Successfully created Zip files/backup_v4.2.zip")
