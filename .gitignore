@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+*.pt
+cached_features/
+cifar100_data/
+Zip files/
+*.zip
+.vscode/
