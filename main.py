@@ -25,11 +25,13 @@ import json
 import torch
 
 from training.engine_baseline import run_single_task_sanity_check, run_full_sequence
+from training.engine_streaming import run_streaming_sequence
+from data_cached import build_streaming_loader
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["sanity", "full"], default="sanity")
+    parser.add_argument("--mode", choices=["sanity", "full", "streaming"], default="sanity")
     parser.add_argument("--backbone", choices=["cnn", "dinov2"], default="dinov2",
                         help="Backbone feature extractor: 'dinov2' (cached) or 'cnn' (raw images)")
     parser.add_argument("--head", choices=["multi", "shared"], default="shared",
@@ -59,6 +61,27 @@ def main():
         if acc <= 0.30:
             print("\nDo NOT proceed to --mode full yet -- fix the architecture/training "
                   "regime first (see the FAIL message above).")
+    elif args.mode == "streaming":
+        # We reuse the args.epochs parameter as epochs_per_stream
+        batch_size = 64
+        streaming_loader, val_loaders, total_batches = build_streaming_loader(
+            batch_size=batch_size, epochs_per_stream=args.epochs
+        )
+        acc_history, model = run_streaming_sequence(
+            streaming_loader=streaming_loader,
+            val_loaders=val_loaders,
+            total_batches=total_batches,
+            lr=args.lr, backbone=args.backbone, head=args.head,
+            scoring=args.scoring, fisher_w1=args.fisher_w1, fisher_w2=args.fisher_w2, device=device
+        )
+        
+        model_save_path = f"phase4_{args.scoring}_streaming_model.pt"
+        matrix_save_path = f"phase4_{args.scoring}_streaming_history.json"
+
+        torch.save(model.state_dict(), model_save_path)
+        with open(matrix_save_path, "w") as f:
+            json.dump(acc_history, f, indent=2)
+        print(f"\nSaved {model_save_path} and {matrix_save_path}")
     else:
         acc_matrix, model = run_full_sequence(
             epochs_per_task=args.epochs, lr=args.lr, backbone=args.backbone, head=args.head,
