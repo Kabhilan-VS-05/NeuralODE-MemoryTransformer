@@ -15,6 +15,25 @@ This codebase captures our progression through the following R&D phases:
     *   *Note: Detailed quantitative results and analysis for all offline benchmarks can be found in the `docs/` directory.*
 *   **Phase 4 (Streaming Continual Learning):** Transitioning from artificial, discrete task boundaries to true, continuous data streams (`run_streaming_sequence`). This includes a dynamic "micro-buffer" architecture capable of iteratively scoring and flushing memory on the fly.
 
+## Consolidated Results (Phases 0–4)
+
+| Method | Setting | Accuracy | Forgetting |
+|---|---|---|---|
+| Base paper — Fine-tuning baseline (as reported) | Offline | 41.2% | 0.487 |
+| Base paper — full proposed method (as reported) | Offline | 72.6% | 0.183 |
+| This project — task-incremental, CNN backbone (Phase 0) | Offline | 40.16% | 0.456 |
+| This project — task-incremental, DINOv2 backbone (Phase 1) | Offline | 94.16% | 0.035 |
+| This project — shared-head, DINOv2, no replay (Phase 1/3) | Offline | ~10.60% | ~0.962 |
+| This project — shared-head, DINOv2, influence scoring (Phase 3) | Offline | 54.04% | 0.473 |
+| This project — shared-head, DINOv2, random replay (Phase 3) | Offline | 61.67% | 0.391 |
+| **This project — Fisher + Prototype (0.3/0.7) (Phase 3)** | Offline | **58.45%** | **0.428** |
+| This project — shared-head, DINOv2, no replay (Phase 4) | **Streaming** | 25.47% | N/A |
+| This project — shared-head, DINOv2, random replay (Phase 4) | **Streaming** | 64.00% | N/A |
+| **This project — Fisher + Prototype (0.3/0.7) (Phase 4)** | **Streaming** | **64.22%** | N/A |
+
+## Hardware Constraints & Implementation Notes
+This project was implemented independently on a consumer **NVIDIA RTX 3050 (4GB VRAM)**, unlike the base paper which utilized enterprise A100 (40GB) GPUs. This massive disparity directly motivated our transition to a frozen DINOv2 backbone and a strictly bounded 500-sample replay capacity.
+
 ## Core Architecture
 
 *   **`main.py`**: The central entry point. Supports running single-task sanity checks (`--mode sanity`), the rigid 10-task offline sequence (`--mode full`), and the continuous data stream (`--mode streaming`).

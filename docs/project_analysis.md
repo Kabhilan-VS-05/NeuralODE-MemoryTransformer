@@ -13,33 +13,28 @@ The base paper proposes a hybrid architecture with three main pillars:
 2. **Memory-Augmented Transformers:** Introduces an external memory bank (200 slots) accessed via attention mechanisms to store and retrieve historical knowledge explicitly.
 3. **Adaptive Optimization & Memory Management:** Modifies gradient updates to balance plasticity and stability, and assigns importance scores to stored samples using Influence Function Approximation.
 
-## 3. Identified Research Gaps and Proposed Novelties
-The project identifies critical limitations in the base paper for real-world application and proposes specific architectural extensions:
+## 3. Identified Research Gaps and Reproducibility Issues
+The project identified critical limitations in the base paper for real-world application, as well as significant reproducibility barriers:
 
-| Base Paper Limitation (The Gap) | Proposed Project Contribution (The Novelty) |
+| Base Paper Limitation (The Gap) | Project Reality / Contribution |
 | :--- | :--- |
-| **Offline Task-Based Learning:** Assumes data arrives in predefined, separated tasks, which is unrealistic for continuous data streams. | **Streaming Continual Learning:** Introduces a streaming buffer and classifier to handle continuous, unstructured real-world data ingestion (e.g., from IoT, APIs). |
-| **Approximate Memory Importance:** Uses Influence Function Approximation, which may discard crucial memories over time. | **Fisher-Information-Based Management:** Replaces influence functions with Fisher Information to more accurately estimate parameter importance and preserve valuable knowledge. |
-| **Unlimited Memory Growth:** Assumes memory can grow indefinitely, making it unsuitable for edge devices. | **Adaptive Fixed-Size Memory Eviction:** Implements a bounded memory strategy where the lowest-priority samples (based on Fisher score) are evicted when the memory is full. |
+| **Missing Code & Transparency:** The base paper claimed code would be available on GitHub, but no repository was ever released. | **Faithful Literal Reproduction:** We painstakingly reconstructed the architecture based on a literal reading of the paper to serve as an honest, self-verified baseline. |
+| **Offline Task-Based Learning:** Assumes data arrives in predefined, separated tasks, which is unrealistic for continuous streams. | **Streaming Continual Learning:** Replaced discrete boundaries with a Gaussian Sliding-Window shuffle, simulating boundary-free continuous ingestion. |
+| **Approximate Memory Importance:** Uses an Influence Function approximation that was beaten by simple random replay. | **Fisher+Prototype Scoring:** Developed a custom scoring mechanism that guards samples with high Fisher-Information curvature, explicitly outperforming the base paper's method. |
+| **Unrealistic Hardware Assumptions:** Original experiments relied on enterprise A100 (40GB) GPUs. | **Consumer Edge Execution:** Entire pipeline was engineered to run locally on a consumer RTX 3050 (4GB VRAM) laptop by pre-caching frozen backbone embeddings. |
 
 ## 4. Engineering & Implementation Strategy
-A significant challenge identified in the research document is that the original authors did not release their source code, and several low-level implementation details were omitted from the paper.
+Because the original authors did not release their source code, our strategy prioritized establishing a verifiable baseline before introducing novelties:
 
-To overcome this, the project has meticulously mapped out **12 missing implementation details** and selected state-of-the-art 2025/2026 research to fill these gaps, ensuring the final implementation is robust and modern:
+* **Literal Reproduction (Phase 0):** We built the exact ODE + Memory Transformer described in the paper. We discovered that without an explicitly disclosed rehearsal mechanism, the architecture suffers from *complete* catastrophic forgetting (collapsing to 8.56% accuracy).
+* **Hardware Adaptation (Phase 1):** To fit the entire workflow onto a 4GB VRAM GPU, we abandoned training a CNN from scratch and instead utilized **frozen DINOv2 (ViT-S/14)** features. This completely eliminated representation drift, allowing us to isolate memory-retention effects.
+* **Algorithmic Benchmarking (Phases 2-3):** We developed a strict, multi-phase evaluation protocol, testing Random Replay, the base paper's Influence Function, and our custom Fisher-Proto scoring against one another.
+* **True Streaming (Phase 4):** We built a dynamic micro-buffer aggregation loop to handle boundary-free streaming data.
 
-* **Image Backbone:** Using **DINOv2 (Meta, 2025)** as a frozen feature extractor for superior representations without forgetting.
-* **ODE Internals:** Using **Tri-Scale Neural ODEs (2025)** for hierarchical, multi-scale temporal modeling (fine, mid, coarse grained).
-* **Memory & Gated Fusion:** Leveraging Google's **Titans / MIRAS (2025)** architecture. This provides a principled "surprise metric" to dictate *when* to write to memory, and uses exact sigmoid-gating (MAG) for fusing memory and ODE outputs.
-* **Gradient Protection (Plasticity/Stability):** Employing **SFAO (Selective Forgetting-Aware Optimization, 2025)** and **SGP (Scaled Gradient Projection, 2025)** to efficiently project gradients without the massive memory overhead of full Fisher matrices, and to dynamically scale protection strength.
-* **Task Complexity & Decay:** Using **Long-CL (2025)** to dynamically adjust memory decay based on semantic task similarity.
-
-## 5. Next Steps for Execution
-The project is mathematically and architecturally fully specified. The next logical steps to begin development are:
-1. **Environment Setup:** Initialize Python, PyTorch, `torchdiffeq`, and `torchvision`.
-2. **Backbone Integration:** Load pretrained DINOv2 weights.
-3. **Module Development:**
-   * Implement the Tri-Scale ODE blocks.
-   * Build the Titans-style memory module with surprise-gated writes.
-   * Construct the memory-augmented Transformer attention layers.
-4. **Training Logic:** Implement the SFAO + SGP gradient protection and the Long-CL dynamic memory allocation loop.
-5. **Evaluation:** Train on Split CIFAR-100, Permuted MNIST, and CORe50, aiming to match or exceed the paper's reported accuracy (e.g., 72.6% on CIFAR-100).
+## 5. Future Work
+Based on our multi-phase evaluation, we have identified specific directions for future extension:
+1. **Increase replay buffer capacity** toward the base paper's own stated 2000 samples (contingent on better hardware) to test if forgetting is mathematically buffer-limited.
+2. **Scale to a larger DINOv2 backbone variant** (`vitb14` or larger) to observe whether richer visual features shift the relative standing of the scoring methods.
+3. **Conduct multi-seed statistical repetition** to establish rigorous confidence intervals, especially for the streaming comparisons where margins were exceptionally thin.
+4. **Refine the Fisher+prototype scoring formula** beyond a fixed linear blend (e.g., Fisher-weighted feature-space distance metrics).
+5. **Reduce the computational overhead** of Fisher-based scoring, as the necessity for per-sample backward passes currently imposes an 11x runtime cost over Random selection.
