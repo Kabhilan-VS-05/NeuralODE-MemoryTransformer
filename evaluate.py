@@ -102,12 +102,12 @@ if __name__ == "__main__":
 
     if args.matrix:
         matrix_file = args.matrix
-    elif os.path.exists("phase1_acc_matrix.json"):
-        matrix_file = "phase1_acc_matrix.json"
-    elif os.path.exists("phase0_acc_matrix.json"):
-        matrix_file = "phase0_acc_matrix.json"
+    elif os.path.exists("results/phase1_acc_matrix.json"):
+        matrix_file = "results/phase1_acc_matrix.json"
+    elif os.path.exists("results/phase0_acc_matrix.json"):
+        matrix_file = "results/phase0_acc_matrix.json"
     else:
-        raise FileNotFoundError("No accuracy matrix JSON found (neither phase1_acc_matrix.json nor phase0_acc_matrix.json).")
+        raise FileNotFoundError("No accuracy matrix JSON found in results/ (neither phase1_acc_matrix.json nor phase0_acc_matrix.json).")
 
     with open(matrix_file) as f:
         acc_matrix = json.load(f)

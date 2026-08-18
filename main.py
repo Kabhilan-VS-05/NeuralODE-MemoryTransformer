@@ -24,9 +24,9 @@ import argparse
 import json
 import torch
 
-from training.engine_baseline import run_single_task_sanity_check, run_full_sequence
-from training.engine_streaming import run_streaming_sequence
-from data_cached import build_streaming_loader
+from src.training.engine_baseline import run_single_task_sanity_check, run_full_sequence
+from src.training.engine_streaming import run_streaming_sequence
+from src.datasets.data_cached import build_streaming_loader
 
 
 def main():
@@ -75,8 +75,8 @@ def main():
             scoring=args.scoring, fisher_w1=args.fisher_w1, fisher_w2=args.fisher_w2, device=device
         )
         
-        model_save_path = f"phase4_{args.scoring}_streaming_model.pt"
-        matrix_save_path = f"phase4_{args.scoring}_streaming_history.json"
+        model_save_path = f"results/phase4_{args.scoring}_streaming_model.pt"
+        matrix_save_path = f"results/phase4_{args.scoring}_streaming_history.json"
 
         torch.save(model.state_dict(), model_save_path)
         with open(matrix_save_path, "w") as f:
@@ -87,8 +87,8 @@ def main():
             epochs_per_task=args.epochs, lr=args.lr, backbone=args.backbone, head=args.head,
             scoring=args.scoring, resume=args.resume, fisher_w1=args.fisher_w1, fisher_w2=args.fisher_w2, device=device)
         
-        model_save_path = f"phase3_{args.scoring}_model.pt"
-        matrix_save_path = f"phase3_{args.scoring}_acc_matrix.json"
+        model_save_path = f"results/phase3_{args.scoring}_model.pt"
+        matrix_save_path = f"results/phase3_{args.scoring}_acc_matrix.json"
 
         torch.save(model.state_dict(), model_save_path)
         with open(matrix_save_path, "w") as f:

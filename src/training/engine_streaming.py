@@ -12,12 +12,12 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from models.hybrid import HybridModel
-from data import NUM_TASKS
-from training.replay_buffer import ReplayBuffer
-from training.fisher_scoring import compute_fisher_scores, compute_fisher_proto_scores
-from training.influence_scoring import score_memory_candidates as score_influence
-from training.engine_baseline import evaluate_task
+from src.models.hybrid import HybridModel
+from src.datasets.data import NUM_TASKS
+from src.training.replay_buffer import ReplayBuffer
+from src.training.fisher_scoring import compute_fisher_scores, compute_fisher_proto_scores
+from src.training.influence_scoring import score_memory_candidates as score_influence
+from src.training.engine_baseline import evaluate_task
 
 def flush_micro_buffer(model, micro_buffer_x, micro_buffer_y, replay_buffer, scoring, fisher_w1, fisher_w2, device):
     """

@@ -18,11 +18,12 @@ This codebase captures our progression through the following R&D phases:
 ## Core Architecture
 
 *   **`main.py`**: The central entry point. Supports running single-task sanity checks (`--mode sanity`), the rigid 10-task offline sequence (`--mode full`), and the continuous data stream (`--mode streaming`).
-*   **`models/`**: Contains the core `HybridModel` which maps 384-dimensional DINOv2 embeddings to a `shared` 100-way or `multi` 10-way classification head.
-*   **`training/engine_baseline.py`**: The traditional offline task-by-task training loop.
-*   **`training/engine_streaming.py`**: The continuous streaming engine, featuring micro-buffer aggregation and periodic memory flushing.
-*   **`training/fisher_scoring.py`**: Implements the logic for our custom tunable `fisher_proto` memory selection scoring.
-*   **`data_cached.py`**: Handles loading pre-computed DINOv2 tensors to bypass heavy CNN feature extraction during rapid R&D iteration. Includes `build_streaming_loader()` for infinite continuous data simulation.
+*   **`results/`**: Output directory for all `.pt` model checkpoints and `.json` accuracy matrices/histories.
+*   **`src/models/`**: Contains the core `HybridModel` which maps 384-dimensional DINOv2 embeddings to a `shared` 100-way or `multi` 10-way classification head.
+*   **`src/training/engine_baseline.py`**: The traditional offline task-by-task training loop.
+*   **`src/training/engine_streaming.py`**: The continuous streaming engine, featuring micro-buffer aggregation and periodic memory flushing.
+*   **`src/training/fisher_scoring.py`**: Implements the logic for our custom tunable `fisher_proto` memory selection scoring.
+*   **`src/datasets/data_cached.py`**: Handles loading pre-computed DINOv2 tensors to bypass heavy CNN feature extraction during rapid R&D iteration. Includes `build_streaming_loader()` for infinite continuous data simulation.
 *   **`docs/`**: Historical markdown artifacts detailing empirical results, analysis, and implementation plans across phases.
 
 ## Quick Start
@@ -30,7 +31,7 @@ This codebase captures our progression through the following R&D phases:
 **1. Generate Cached DINOv2 Features:**
 Before training, you must extract and cache the CIFAR-100 dataset features to disk:
 ```bash
-python data_dinov2.py
+python src/datasets/data_dinov2.py
 ```
 
 **2. Run Offline Benchmark Sequence:**

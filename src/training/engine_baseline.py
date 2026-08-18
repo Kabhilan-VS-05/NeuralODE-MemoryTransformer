@@ -20,11 +20,11 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from models.hybrid import HybridModel
-from data import NUM_TASKS, CLASSES_PER_TASK
-from training.replay_buffer import ReplayBuffer
-from training.fisher_scoring import compute_fisher_scores, compute_fisher_proto_scores
-from training.influence_scoring import score_memory_candidates as score_influence
+from src.models.hybrid import HybridModel
+from src.datasets.data import NUM_TASKS, CLASSES_PER_TASK
+from src.training.replay_buffer import ReplayBuffer
+from src.training.fisher_scoring import compute_fisher_scores, compute_fisher_proto_scores
+from src.training.influence_scoring import score_memory_candidates as score_influence
 
 
 def get_task_loaders(backbone: str = "dinov2", batch_size: int = 64):
@@ -34,10 +34,10 @@ def get_task_loaders(backbone: str = "dinov2", batch_size: int = 64):
     - 'cnn': loads raw 32x32 images for the from-scratch CNN (via data.py)
     """
     if backbone == "dinov2":
-        from data_cached import build_task_loaders as build_cached_loaders
+        from src.datasets.data_cached import build_task_loaders as build_cached_loaders
         return build_cached_loaders(batch_size=batch_size)
     elif backbone == "cnn":
-        from data import build_task_loaders as build_raw_loaders
+        from src.datasets.data import build_task_loaders as build_raw_loaders
         return build_raw_loaders(batch_size=batch_size)
     else:
         raise ValueError(f"Unknown backbone '{backbone}'. Choose 'dinov2' or 'cnn'.")

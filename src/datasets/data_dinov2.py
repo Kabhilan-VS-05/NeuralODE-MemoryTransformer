@@ -15,7 +15,7 @@ import torchvision.transforms as T
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 
-from data import NUM_TASKS, CLASSES_PER_TASK, _class_indices_for_task
+from src.datasets.data import NUM_TASKS, CLASSES_PER_TASK, _class_indices_for_task
 
 DINOV2_EMBED_DIM = 384  # dinov2_vits14 CLS token dimension
 

@@ -12,7 +12,7 @@ import os
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from data import NUM_TASKS, CLASSES_PER_TASK
+from src.datasets.data import NUM_TASKS, CLASSES_PER_TASK
 
 DINOV2_EMBED_DIM = 384
 

@@ -22,9 +22,9 @@ impossible under a shared 100-way head with no replay (which collapses to 0%).
 import torch
 import torch.nn as nn
 
-from models.ode import NeuralODELayer
-from models.memory import MemoryModule
-from models.transformer import TransformerFusion
+from src.models.ode import NeuralODELayer
+from src.models.memory import MemoryModule
+from src.models.transformer import TransformerFusion
 
 
 class ImageEmbedding(nn.Module):
