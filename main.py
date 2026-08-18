@@ -36,7 +36,7 @@ def main():
                         help="Backbone feature extractor: 'dinov2' (cached) or 'cnn' (raw images)")
     parser.add_argument("--head", choices=["multi", "shared"], default="shared",
                         help="Classifier head: 'multi' (10 separate 10-way heads) or 'shared' (single 100-way head)")
-    parser.add_argument("--scoring", choices=["none", "random", "influence", "fisher", "fisher_proto"], default="none",
+    parser.add_argument("--scoring", choices=["none", "random", "influence", "fisher", "fisher_proto"], default="fisher_proto",
                         help="Replay candidate scoring method: 'none', 'random', 'influence', 'fisher', 'fisher_proto'")
     parser.add_argument("--resume", action="store_true", default=True,
                         help="Automatically resume from last completed task if checkpoint exists")
@@ -44,9 +44,9 @@ def main():
                         help="Disable resuming and start from Task 0")
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--lr", type=float, default=5e-4)
-    parser.add_argument("--fisher_w1", type=float, default=0.5,
+    parser.add_argument("--fisher_w1", type=float, default=0.3,
                         help="Weight for Fisher sensitivity in fisher_proto scoring")
-    parser.add_argument("--fisher_w2", type=float, default=0.5,
+    parser.add_argument("--fisher_w2", type=float, default=0.7,
                         help="Weight for prototype distance penalty in fisher_proto scoring")
     args = parser.parse_args()
 

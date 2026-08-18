@@ -10,3 +10,5 @@ Zip files/
 *.zip
 .vscode/
 data/
+backups/
+*.tar.gz

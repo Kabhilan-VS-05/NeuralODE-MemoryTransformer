@@ -72,23 +72,67 @@ def build_task_loaders(cache_dir: str = "./cached_features",
 def build_streaming_loader(cache_dir: str = "./cached_features",
                            batch_size: int = 64,
                            epochs_per_stream: int = 1,
-                           num_workers: int = 0):
+                           num_workers: int = 0,
+                           blur_window_std: float = 2000.0,
+                           seed: int = 42):
     """
-    Returns a generator that yields batches seamlessly across all 10 tasks,
-    repeating the entire sequence `epochs_per_stream` times to simulate continuous data.
-    Also returns `val_loaders` for periodic evaluation.
-    """
-    train_loaders, val_loaders = build_task_loaders(cache_dir, batch_size, num_workers)
+    Returns a single DataLoader that yields batches across all 10 tasks,
+    repeating `epochs_per_stream` times.
     
-    total_batches = sum(len(loader) for loader in train_loaders) * epochs_per_stream
+    CRITICAL CHANGE (Phase 4): 
+    Instead of discrete task boundaries, we apply a Gaussian noise shuffle to the
+    strict sequential order of the 50,000 samples. This blurs the boundaries so 
+    Task N smoothly overlaps with Task N-1 and N+1, simulating true continuous streaming.
+    """
+    import random
+    from torch.utils.data import TensorDataset
+    
+    # Fix seed for identical apple-to-apples streams across different scoring runs
+    gen = torch.Generator()
+    gen.manual_seed(seed)
+    random.seed(seed)
+    
+    # We still need val_loaders for periodic evaluation
+    _, val_loaders = build_task_loaders(cache_dir, batch_size, num_workers)
+    
+    all_x, all_y = [], []
+    for task_id in range(NUM_TASKS):
+        train_path = os.path.join(cache_dir, f"task_{task_id}_train.pt")
+        data = torch.load(train_path, weights_only=True)
+        # Randomly shuffle within the task itself first to break ordered class blocks using the generator
+        idx = torch.randperm(data['features'].shape[0], generator=gen)
+        all_x.append(data['features'][idx])
+        all_y.append(data['labels'][idx])
+        
+    global_x = torch.cat(all_x, dim=0)
+    global_y = torch.cat(all_y, dim=0)
+    
+    total_samples = len(global_x)
+    
+    def get_blurred_indices():
+        # Add Gaussian noise to the sequential index to blur boundaries
+        noisy_indices = [(i, i + random.gauss(0, blur_window_std)) for i in range(total_samples)]
+        noisy_indices.sort(key=lambda x: x[1])
+        return [x[0] for x in noisy_indices]
 
-    def stream_generator():
-        for _ in range(epochs_per_stream):
-            for loader in train_loaders:
-                for x, y in loader:
-                    yield x, y
-
-    return stream_generator(), val_loaders, total_batches
+    stream_x, stream_y = [], []
+    for _ in range(epochs_per_stream):
+        shuffled_idx = torch.tensor(get_blurred_indices(), dtype=torch.long)
+        stream_x.append(global_x[shuffled_idx])
+        stream_y.append(global_y[shuffled_idx])
+        
+    final_x = torch.cat(stream_x, dim=0)
+    final_y = torch.cat(stream_y, dim=0)
+    
+    streaming_dataset = TensorDataset(final_x, final_y)
+    streaming_loader = DataLoader(
+        streaming_dataset, batch_size=batch_size, shuffle=False, 
+        num_workers=num_workers, drop_last=True
+    )
+    
+    total_batches = len(streaming_loader)
+    
+    return streaming_loader, val_loaders, total_batches
 
 
 if __name__ == "__main__":
