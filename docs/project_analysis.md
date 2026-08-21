@@ -31,10 +31,22 @@ Because the original authors did not release their source code, our strategy pri
 * **Algorithmic Benchmarking (Phases 2-3):** We developed a strict, multi-phase evaluation protocol, testing Random Replay, the base paper's Influence Function, and our custom Fisher-Proto scoring against one another.
 * **True Streaming (Phase 4):** We built a dynamic micro-buffer aggregation loop to handle boundary-free streaming data.
 
-## 5. Future Work
-Based on our multi-phase evaluation, we have identified specific directions for future extension:
-1. **Increase replay buffer capacity** toward the base paper's own stated 2000 samples (contingent on better hardware) to test if forgetting is mathematically buffer-limited.
-2. **Scale to a larger DINOv2 backbone variant** (`vitb14` or larger) to observe whether richer visual features shift the relative standing of the scoring methods.
-3. **Conduct multi-seed statistical repetition** to establish rigorous confidence intervals, especially for the streaming comparisons where margins were exceptionally thin.
-4. **Refine the Fisher+prototype scoring formula** beyond a fixed linear blend (e.g., Fisher-weighted feature-space distance metrics).
-5. **Reduce the computational overhead** of Fisher-based scoring, as the necessity for per-sample backward passes currently imposes an 11x runtime cost over Random selection.
+## 5. Threats to Validity and Limitations
+
+- **Statistical Rigor**: All Phase 3 and Phase 4 results derive from single experimental runs per configuration (one random seed each). The 0.22-percentage-point margin observed in Phase 4 between Fisher+Prototype and Random replay should be treated as statistically indistinguishable from a tie, not as a confirmed effect without multi-seed statistical verification.
+- **Buffer Capacity**: The replay buffer capacity used throughout this project (500 samples) is substantially smaller than the base paper's stated 2000-sample buffer, due to hardware constraints. This likely limits achievable accuracy across all tested methods.
+- **Hardware Profile**: DINOv2 features were extracted using the smallest model variant (`vits14`), which may produce different absolute results compared to larger models.
+- **Streaming Construction**: The specific Gaussian sliding-window construction represents one reasonable design choice among several alternatives; results may exhibit some sensitivity to this specific choice.
+
+## 6. Future Work
+
+1. **Conduct multi-seed repetition (five or more seeds)** of the Phase 3 and Phase 4 experiments to establish proper confidence intervals around the Fisher-versus-random comparison.
+2. **Complete the Fisher+Prototype weighting ablation** beyond the three points currently tested to establish whether w1=0.3 is close to a true optimum.
+3. **Profile the computational cost of Fisher-based scoring** to determine precisely where the observed 11x runtime overhead originates.
+4. **Increase replay buffer capacity** toward the base paper's own stated 2000 samples, contingent on access to hardware with greater available memory.
+5. **Scale to a larger DINOv2 backbone variant** (`vitb14` or larger) to test whether richer visual features meaningfully change the relative standing of the compared scoring methods.
+6. **Reduce the computational overhead of Fisher-based scoring** via a diagonal-only or layer-wise Fisher approximation, or batched candidate scoring.
+7. **Test additional streaming constructions and parameters** varying window width, or testing alternative non-stationary orderings (e.g. gradual class drift, injected label noise).
+8. **Compare against additional memory-selection baselines from the literature** (e.g. least-recently-used retention, feature-diversity-based scoring, or k-center coreset selection).
+9. **Attempt to more precisely reconstruct the base paper's likely undisclosed rehearsal mechanism** by systematically testing combinations of replay ratio, buffer size, and gradient-projection techniques.
+10. **Access to more capable compute infrastructure** to directly enable items 1, 2, 4, and 5 above.

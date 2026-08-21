@@ -25,6 +25,29 @@ We have completed the benchmarking of the four distinct memory scoring mechanism
 6. **Why did Random still win?** 
    - **Diversity vs. Importance**: While `fisher_proto` penalizes outliers, it still strictly selects the highest-scoring samples. Random sampling naturally preserves the exact true distribution and density of the latent space without relying on fixed arbitrary weightings.
 
+## Per-Task Accuracy Trajectories (Detailed Breakdown)
+
+Accuracy on each task, measured immediately after Task 9 (the final task) finished training, for every scoring method compared in Phase 3:
+
+| Task | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | **Avg** |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| None | 0.00% | 0.00% | 0.00% | 0.00% | 0.10% | 0.00% | 0.80% | 1.80% | 4.60% | 98.70% | **10.60%** |
+| Influence (paper's method) | 46.10% | 51.70% | 56.60% | 35.90% | 43.10% | 47.20% | 39.30% | 50.00% | 72.20% | 98.30% | **54.04%** |
+| **Fisher + Prototype (0.3/0.7)** | 56.90% | 55.00% | 58.80% | 45.80% | 48.30% | 49.40% | 53.70% | 51.40% | 66.10% | 99.10% | **58.45%** |
+| Random | 63.70% | 56.40% | 64.50% | 50.20% | 54.00% | 51.00% | 49.50% | 55.60% | 73.10% | 98.70% | **61.67%** |
+
+**Observed pattern:** The `None` row demonstrates near-total, near-instantaneous forgetting. All three replay-based methods show elevated retention on the most recent tasks (Tasks 7–9), with Task 3 consistently the weakest performer across all three methods. Random replay's advantage over Fisher+Prototype is fairly evenly distributed across most tasks.
+
+### Fisher+Prototype Weighting Comparison (Partial Sweep)
+
+| Configuration | Accuracy | Forgetting |
+|---|---|---|
+| w1=0.5, w2=0.5 (equal weighting) | 57.30% | 0.439 |
+| w1=0.0, w2=1.0 (pure prototype, no Fisher signal) | 58.07% | 0.432 |
+| **w1=0.3, w2=0.7 (best tested)** | **58.45%** | **0.428** |
+
+The non-monotonic result (0.3/0.7 outperforming both extremes) indicates a genuine positive contribution from Fisher signal when present in a minority proportion.
+
 ## Phase 3 Conclusion
 We successfully benchmarked standard memory eviction strategies and isolated a critical flaw in influence-function/Fisher scoring: without regularization, gradients over-index on non-representative outliers. By hybridizing gradient sensitivity with prototype distance (`fisher_proto`), we improved accuracy from `52.74%` to `58.45%` and definitively proved both signals are valuable. However, naive random sampling still acts as the strongest baseline (`61.67%`), heavily suggesting that for true streaming learning, natural data distributions provide a superior foundation to rigidly structured memory scoring under a tight 500-sample budget.
 

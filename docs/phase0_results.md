@@ -26,6 +26,16 @@ Determining *why* the base paper achieved 72.6% while we achieved 8.56% required
 | 2nd | Shared 100-way head, 30 epochs/task | **8.56%** | Total catastrophic forgetting. A shared head without any memory rehearsal completely overwrites past classes. |
 | 3rd | Task-incremental (10 separate 10-way heads) | **40.16%** | Matches the base paper's "Fine-Tuning" baseline (41.2%) almost exactly. This proves the base paper evaluated using task-incremental bounds. |
 
+## Per-Task Accuracy Trajectories (Detailed Breakdown)
+
+Accuracy on each task, measured immediately after Task 9 (the final task) finished training in the Task-Incremental Multi-Head setup (40.16% overall):
+
+| Task | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Accuracy | 18.40% | 15.70% | 26.70% | 29.10% | 27.80% | 29.50% | 50.80% | 56.00% | 60.70% | 86.90% |
+
+**Observed pattern:** A clear recency bias. Accuracy on a task generally increases the more recently it was trained. This is the expected signature of gradual representational drift in a shared backbone under a task-incremental head structure, distinct from the *total* collapse seen in the shared-head configuration.
+
 ## Conclusion
 
 We have fulfilled **Phase 0**. We built the architecture exactly as described in the paper, without adding any external tricks or our own novelties. 
